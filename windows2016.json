@@ -1,0 +1,202 @@
+{
+  "variables": [
+    {
+      "iso_url": "http://care.dlservice.microsoft.com/dl/download/5/A/2/5A2C8AEF-EDD8-4025-801B-C7171FAF761D/14393.0.161119-1705.RS1_REFRESH_SERVER_EVAL_X64FRE_FR-FR.ISO",
+      "iso_checksum_type": "md5",
+      "iso_checksum": "7A5BA5326CA17B3F3FB3E9DA72C746A0",
+      "cloud_token": "",
+      "version": ""
+    }
+  ],
+  "builders": [
+    {
+      "type": "vmware-iso",
+      "vm_name": "packer-windows_2016-x86_64",
+
+      "guest_os_type": "windows8srv-64",
+      "tools_upload_flavor": "windows",
+
+      "headless": false,
+
+      "vmx_data": {
+        "cpuid.coresPerSocket": "1",
+        "ethernet0.pciSlotNumber": "32",
+        "memsize": "4096",
+        "numvcpus": "4",
+        "scsi0.virtualDev": "lsisas1068"
+      },
+
+      "vnc_disable_password": true,
+      "vnc_port_min": 5900,
+      "vnc_port_max": 6000,
+
+      "iso_url": "{{user `iso_url`}}",
+      "iso_checksum_type": "{{user `iso_checksum_type`}}",
+      "iso_checksum": "{{user `iso_checksum`}}",
+
+      "boot_wait": "2m",
+
+      "communicator":"winrm",
+      "winrm_username": "vagrant",
+      "winrm_password": "vagrant",
+      "winrm_timeout": "30m",
+      "shutdown_command": "a:\\run-sysprep.cmd",
+
+      "disk_size": 16000,
+
+      "floppy_files": [
+        "./answer_files/2016/Autounattend.xml",
+        "./scripts/enable-winrm.ps1",
+        "./scripts/enable-winrm.task.ps1",
+        "./scripts/run-sysprep.cmd",
+        "./scripts/run-sysprep.ps1",
+        "./scripts/install-7zip.ps1",
+        "./scripts/install-vmware-tools.ps1",
+        "./scripts/cleanup.ps1",
+        "./scripts/ultradefrag.ps1",
+        "./scripts/optimize-drive.ps1",
+        "./scripts/sdelete.ps1",
+        "./scripts/sysprep-unattend.xml",
+        "./scripts/openssh.ps1",
+        "./scripts/ConfigureRemotingForAnsible.ps1",
+        "./scripts/install-choco-and-virtualbox-additions.ps1"
+      ]
+    },
+
+    {
+      "type": "virtualbox-iso",
+      "vm_name": "packer-windows_2016-x86_64",
+
+      "guest_os_type": "Windows2016_64",
+      "guest_additions_mode": "attach",
+
+      "headless": false,
+
+      "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--memory", "4096"],
+        ["modifyvm", "{{.Name}}", "--cpus", "4"],
+        ["modifyvm", "{{.Name}}", "--vram", "64"],
+        ["modifyvm", "{{.Name}}", "--audio", "none"],
+        ["modifyvm", "{{.Name}}", "--nictype1", "82540EM"],
+        ["modifyvm", "{{.Name}}", "--nictype2", "82540EM"],
+        ["modifyvm", "{{.Name}}", "--nictype3", "82540EM"],
+        ["modifyvm", "{{.Name}}", "--nictype4", "82540EM"],
+        [ "createmedium", "--filename", "disk2.vdi", "--size", "32000" ],
+        [ "storageattach", "{{.Name}}", "--storagectl", "SATA Controller", "--port", "1", "--type", "hdd", "--medium", "disk2.vdi" ]
+        ],
+
+      "hard_drive_interface": "sata",
+
+      "iso_url": "{{user `iso_url`}}",
+      "iso_checksum_type": "{{user `iso_checksum_type`}}",
+      "iso_checksum": "{{user `iso_checksum`}}",
+
+      "boot_wait": "2m",
+
+      "disk_size": 350,
+
+      "communicator":"winrm",
+      "winrm_username": "vagrant",
+      "winrm_password": "vagrant",
+      "winrm_timeout": "30m",
+      "shutdown_command": "a:\\run-sysprep.cmd",
+
+      "floppy_files": [
+        "./answer_files/2016/Autounattend.xml",
+        "./scripts/enable-winrm.ps1",
+        "./scripts/enable-winrm.task.ps1",
+        "./scripts/run-sysprep.cmd",
+        "./scripts/run-sysprep.ps1",
+        "./scripts/install-7zip.ps1",
+        "./scripts/install-vmware-tools.ps1",
+        "./scripts/cleanup.ps1",
+        "./scripts/ultradefrag.ps1",
+        "./scripts/optimize-drive.ps1",
+        "./scripts/sdelete.ps1",
+        "./scripts/sysprep-unattend.xml",
+        "./scripts/openssh.ps1",
+        "./scripts/ConfigureRemotingForAnsible.ps1",
+        "./scripts/install-choco-and-virtualbox-additions.ps1",
+        "./scripts/win-updates.ps1"
+      ]
+    },
+    {
+      "name": "hyperv2",
+      "type": "hyperv-iso",
+      "vm_name": "packer-windows2016-x86-64",
+
+      "headless": false,
+
+      "iso_url": "{{user `iso_url`}}",
+      "iso_checksum_type": "{{user `iso_checksum_type`}}",
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "switch_name":"packer-hyperv-iso",
+
+      "boot_wait": "10s",
+
+      "communicator":"winrm",
+      "winrm_username": "vagrant",
+      "winrm_password": "vagrant",
+      "winrm_timeout": "30m",
+      "boot_command": [
+             "b<wait>b<wait>b"
+           ],
+
+      "disk_size": 32000,
+      "ram_size": 2048,
+      "enable_dynamic_memory": "true",
+      "cpu": 2,
+      "generation": 2,
+      "secondary_iso_images": [
+            "answer.iso"
+        ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "powershell",
+      "elevated_user": "vagrant",
+      "elevated_password": "vagrant",
+      "scripts": [
+        "./scripts/install-7zip.ps1",
+        "./scripts/install-vmware-tools.ps1",
+        "./scripts/install-choco-and-virtualbox-additions.ps1"
+      ]
+    },
+    {
+      "type": "windows-restart"
+    },
+    {
+      "type": "powershell",
+      "elevated_user": "vagrant",
+      "elevated_password": "vagrant",
+      "scripts": [
+        "./scripts/cleanup.ps1",
+        "./scripts/ultradefrag.ps1",
+        "./scripts/optimize-drive.ps1",
+        "./scripts/sdelete.ps1",
+        "./scripts/openssh.ps1",
+        "./scripts/enable-rdp.ps1",
+        "./scripts/ConfigureRemotingForAnsible.ps1"
+      ]
+    },
+    {
+      "type": "windows-restart"
+    }
+  ],
+  "post-processors": [
+    [
+      {
+        "type": "vagrant",
+        "output": "builds/{{.Provider}}-windows2016.box",
+        "vagrantfile_template": "Vagrantfile.tpl"
+      },
+      {
+        "type": "vagrant-cloud",
+        "box_tag": "vhubert/windows2016",
+        "access_token": "{{user `cloud_token`}}",
+        "version": "{{user `version`}}"
+      }
+    ]
+  ]
+}
